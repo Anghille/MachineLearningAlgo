@@ -11,5 +11,3 @@ This repository is used to show-case the implementation of most known machine-le
 <br><br>
 
 # Versioning
-
-v 0.0.0
