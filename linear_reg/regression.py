@@ -3,17 +3,15 @@ import numpy as np
 import pandas as pd
 import math as ms
 from typing import Union, List, Tuple
+from sklearn.preprocessing import PolynomialFeatures
 
-# : Union[np.ndarray, l, t]
-l = List[Union[float, int]]
-t = Tuple[Union[float, int]]
+# # : Union[np.ndarray, l, t]
+# l = List[Union[float, int]]
+# t = Tuple[Union[float, int]]
 
 class LinearRegression:
-    """
-
-    """
-
-
+    """ """
+    
     def __init__(self, loss="ols", poly=False, degree=1, verbose=False, X_bias=True):
         self.poly = poly
         self.loss = loss
@@ -49,40 +47,62 @@ class LinearRegression:
         """
         if "ols" in self.loss:
             return np.linalg.inv(X.T.dot(X)).dot(X.T.dot(y))
+        else:
+            return self.__gradient_descent(X, y, epochs=50)
     
 
-    # def __sigmoid(self, X):
-    #     """Compute the sigmoid Activation function."""
-    #     def sig(x):
-    #         return 1 / (1 + ms.exp(-x))
-    #     return sig(X)  
+    def __gradient_descent(self, X, y, epochs=50):
+        """Compute the gradient descent algorithm and return the weights used to predict y values"""
+
+        def initialize_value(matrix: np.ndarray):
+            """Return initialized random values between [-1, 0[ u ]0, 1]
+            used for gradient descent (for weights beta and bias)"""
+
+            # Initialize random values between -1/1 for the weights
+            initialised_value = np.random.uniform(-1, 1, (matrix.shape[1], 1)) # Generate X.shape[1] weights (should be 3)
+            
+            # Re-initialize values that are equal to 0 (if any) until no zeros can be found
+            # in the initialized weight matrix
+            # Why ? Having 0 in the initialize weight would "cancel" this weight at start when 
+            # Trying to find the best values. Which would lead to higher error in prediction
+            while np.count_nonzero(initialised_value == 0) >= 1:
+                for i in range(initialised_value.shape[0]):
+                    for j in range(initialised_value.shape[1]):
+                        if initialised_value[i,j] == 0:
+                            initialised_value[i, j] = np.random.uniform(-1, 1)
+
+            return initialised_value
 
 
-    # def __weights_initialization(self, X):
-    #     initialised_weights = np.random.rand(X.shape[0], X.shape[1])
+        def loss(matrix_X, vec_y, weights):
+            """Return de quadratic error function used as cost function in linear regression
+            Reminder : MSE = 1/2m * SUM ((aX + b) - y)² """
 
-    #     # Check that no 0-weights are initialized (otherwize it will not be used in backpropagation)
-    #     def remove_zero(initialised_weights):
-    #         while np.isin(initialised_weights, 0).any():
-    #             for i in range(initialised_weights.shape[0]):
-    #                 for j in range(initialised_weights.shape[1]):
-    #                     if initialised_weights[i, j] == 0:
-    #                         initialised_weights[i, j] = np.random.rand()
-    #             return remove_zero(initialised_weights)
-    #     remove_zero(initialised_weights)
+            loss = (1/(2*matrix_X.shape[0])) * (matrix_X @ weights - vec_y).T @ (matrix_X @ weights - vec_y)   # X.T @ X = sum ( X² ) --> X = (matrix_X @ weights - y)
 
-    #     return initialised_weights
+            return loss.tolist()[0][0]
 
-         
 
-    # def __backpropagation(self, X, y):
-    #     weights = self.__weights_initialization(X)
-    #     bias = np.ones((X.shape[0], 1))
+        def gradient(matrix_X, vec_y, weights, alpha=0.01):
+            """Compute the gradient descent using weight, X and y as well as the learning rate alpha"""
 
-    #     z = weights.dot(X) + bias
-    #     activation = self.__sigmoid(z)
+            derivative = (1/matrix_X.shape[0]) * matrix_X.T @ (matrix_X @ weights - vec_y)
+            weights -= alpha * derivative
 
-    #     return None
+            return weights
+
+        weights = initialize_value(X)
+        if self.verbose:
+            for n in range(epochs):
+                print("Epoch - ", n)
+                print("Loss:", loss(X, y, weights))
+                weights = gradient(X, y, weights, alpha=0.0000001)
+        else:
+            for n in range(epochs):
+                weights = gradient(X, y, weights, alpha=0.0000001)
+            
+        return weights
+
 
     def __bias(self, X):
         return np.c_[X, np.ones(X.shape[0])]
@@ -126,45 +146,11 @@ class LinearRegression:
         """
 
         """
-        # If the polynomial parameter is set to true: 
-        # Return a matrix with initial features and
-        # product of features and polynomial degrees
-        # ex: if X = [x1, x2, x3]
-        # then: X -> X = [x1, x2, x3, x1x2, x1x3, x2x3, x1**2, x2**2, x3**3]
-        def product(X):  
-            """Compute the product of each feature in X
-            Return: X matrix with product of each features"""          
-            nb_columns = X.shape[1]
-            passed_feature = []
-            # To make the products x1x2, x1x3, x2x3 ...
-            for i in range(nb_columns):
-                passed_feature.append(i)
-                for f in range(nb_columns):
-                    if f in passed_feature:
-                        pass
-                    else:
-                        X = np.c_[X, X[:,f]*X[:,i]]
-            return X
-
-        def poly(X, nb_columns):
-            """ Compute te polynomial features.\n
-            Return: X matrix with polynomial features
-            """   
-            for feature in X[:, :nb_columns].T:
-                for power in range(2, self.degree+1):
-                    vec = (feature**power).reshape((feature**power).shape[0], 1)
-                    X = np.c_[X, vec]
-            return X
-
-        #Initialize global column shape (used in code to avoid X feature duplication)
-        col = X.shape[1]
-
         # Do the poly transform only if poly set to true and degree > 1
         # if degree == 1, there is no transformation, even if poly == True
         if self.poly and self.degree > 1:
-            col = X.shape[1]
-            X = product(X)
-            X = poly(X, col)
+            poly = PolynomialFeatures(self.degree)
+            poly.fit(X)
             return X
         else: 
             return X
@@ -205,7 +191,7 @@ class LinearRegression:
         # Fit linear model weights to data using ols
         self.weights_ = self.__ols(X, y)
 
-        # self.weights = self.__backpropagation(X, y)
+        # self.weights_ = self.__gradient_descent(X, y, epochs=50)
 
 
     def predict(self, X):
@@ -269,20 +255,4 @@ class LinearRegression:
         ssres = np.sum((y - self.predict(X))**2)
 
         return 1 - (ssres/sstot)
-
-    def __standard_deviation(self, X):
-        """
-        """
-        return X.std(axis=0)
-
-    def __covariance(self, X, y):
-        """
-        """
-        return np.cov(X, y.T)
-
-    def __correlation(self, X, y):
-        """
-        """
-        return np.corrcoef(X.T, y.T)
-
 
