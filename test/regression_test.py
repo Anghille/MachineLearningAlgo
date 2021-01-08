@@ -73,9 +73,10 @@ def test_linear_ols_poly_1degree(x_y):
     Check that if we add parameter poly=True but dont specify degree, 
     we keep a multilinear regression with 1-degree features
     """
-    lin = LinearRegression(poly=True)
+    lin = LinearRegression(poly=True ,loss="ols")
     lin.fit(x_y[0], x_y[2])
     y_pred = lin.predict(x_y[1])
+    print("entering score")
     r2 = round(lin.score(x_y[1], x_y[3]), 2)
 
     assert r2 == 0.97
@@ -85,25 +86,21 @@ def test_linear_ols_poly_2degree(x_y):
     Check that if we add parameter poly=True but dont specify degree, 
     we keep a multilinear regression with 1-degree features
     """
-    lin = LinearRegression(poly=True, degree=2)
+    lin = LinearRegression(poly=True, degree=2, loss="gradient", learning_rate=0.00000001, epochs=50000)
     lin.fit(x_y[0], x_y[2])
     y_pred = lin.predict(x_y[1])
     r2 = round(lin.score(x_y[1], x_y[3]), 2)
-    # print("X_train:", x_y[0].shape, "\ny_train:", x_y[2].shape)
-    # print("X_test:", x_y[1].shape, "\ny_test:", x_y[3].shape)
 
-    assert r2 == 0.98
+    assert r2 > .60
 
 def test_linear_ols_poly_3degree(x_y):
     """
     Check that if we add parameter poly=True but dont specify degree, 
     we keep a multilinear regression with 1-degree features
     """
-    lin = LinearRegression(poly=True, degree=3)
+    lin = LinearRegression(poly=True, degree=3, loss="gradient", learning_rate=0.00000001, epochs=50000)
     lin.fit(x_y[0], x_y[2])
     y_pred = lin.predict(x_y[1])
     r2 = round(lin.score(x_y[1], x_y[3]), 2)
-    # print("X_train:", x_y[0].shape, "\ny_train:", x_y[2].shape)
-    # print("X_test:", x_y[1].shape, "\ny_test:", x_y[3].shape)
 
-    assert r2 == 0.80
+    assert r2 > .60
