@@ -12,21 +12,23 @@ from sklearn.preprocessing import PolynomialFeatures
 class LinearRegression:
     """ """
     
-    def __init__(self, loss="ols", poly=False, degree=1, verbose=False, X_bias=True):
+    def __init__(self, loss="ols", poly=False, degree=1, X_bias=True, epochs=50, learning_rate=0.01):
+        """Init parameters of the LinearRegression Class"""
+
+        # Polynomial 
         self.poly = poly
-        self.loss = loss
         self.degree = degree
+
+        # Loss function
+        self.loss = loss
+        self.epochs = epochs
+        self.learning_rate = learning_rate
+        
+        # Bias 
         self.X_bias = X_bias
 
+        # Weights of the regression
         self.weights_ = None
-
-        self.verbose = verbose
-        if self.verbose:
-            self.__model_display() 
-
-
-    def __model_display(self):
-        print(f"LinearRegression(Loss='{self.loss}', poly={self.poly}, degree={self.degree}, verbose={self.verbose})")
 
 
     def __ols(self, X, y):
@@ -38,21 +40,36 @@ class LinearRegression:
         ---
         Return
         ---
-        Return a weight matrix of shape X
+        Return a weight matrix of shape X (X.shape[1], 1)
 
         ---
         Formula
         ---
+        MSE = (1/n) * sum([ax+b - y]²) --> vectorized --> (1/n)(aX - y).T @ (aX - y)
+        MSE/a = 0: weights = (X.T @ X)-1 @ (X.T @ y)
         weights = inverse(X.T . X) dot X.T . y
         """
-        if "ols" in self.loss:
-            return np.linalg.inv(X.T.dot(X)).dot(X.T.dot(y))
-        else:
-            return self.__gradient_descent(X, y, epochs=50)
+
+        return np.linalg.inv(X.T.dot(X)).dot(X.T.dot(y))
     
 
-    def __gradient_descent(self, X, y, epochs=50):
-        """Compute the gradient descent algorithm and return the weights used to predict y values"""
+    def __gradient_descent(self, X, y, epochs, learning_rate):
+        """
+        Internal class method
+        ---
+        Compute the weights of the linear model using Batch Gradient Descent
+        
+        ---
+        Return
+        ---
+        Return a weight matrix of shape X (X.shape[1], 1)
+
+        ---
+        Formula
+        ---
+        weights_(t) = weights_(t-1) - learning_rate * gradient(MSE w.r.t weights)
+        gradient(MSE w.r.t weights) = X.T @ [(X @ weights - y)]
+        """
 
         def initialize_value(matrix: np.ndarray):
             """Return initialized random values between [-1, 0[ u ]0, 1]
@@ -74,37 +91,33 @@ class LinearRegression:
             return initialised_value
 
 
-        def loss(matrix_X, vec_y, weights):
-            """Return de quadratic error function used as cost function in linear regression
-            Reminder : MSE = 1/2m * SUM ((aX + b) - y)² """
-
-            loss = (1/(2*matrix_X.shape[0])) * (matrix_X @ weights - vec_y).T @ (matrix_X @ weights - vec_y)   # X.T @ X = sum ( X² ) --> X = (matrix_X @ weights - y)
-
-            return loss.tolist()[0][0]
-
-
-        def gradient(matrix_X, vec_y, weights, alpha=0.01):
+        def gradient(matrix_X, vec_y, weights, learning_rate):
             """Compute the gradient descent using weight, X and y as well as the learning rate alpha"""
+            loss = (matrix_X @ weights - vec_y)
+            cost = (1/(2*matrix_X.shape[0])) * loss.T @ loss 
+            gradient = matrix_X.T @ loss
+            weights = weights - learning_rate * (1/matrix_X.shape[0]) * gradient
 
-            derivative = (1/matrix_X.shape[0]) * matrix_X.T @ (matrix_X @ weights - vec_y)
-            weights -= alpha * derivative
+            return weights, cost.tolist()[0][0]
 
-            return weights
-
-        weights = initialize_value(X)
-        if self.verbose:
-            for n in range(epochs):
-                print("Epoch - ", n)
-                print("Loss:", loss(X, y, weights))
-                weights = gradient(X, y, weights, alpha=0.0000001)
-        else:
-            for n in range(epochs):
-                weights = gradient(X, y, weights, alpha=0.0000001)
+        self.weights_ = initialize_value(X)
+        for n in range(epochs):
+            self.weights_ = gradient(X, y, self.weights_, learning_rate)[0]
             
-        return weights
+        return self.weights_
 
 
     def __bias(self, X):
+        """
+        Internal class method
+        ---
+        Add bias feature the the matrix
+        
+        ---
+        Return
+        ---
+        Return a new matrix of shape X (X.shape[0], X.shape[1] + 1)
+        """
         return np.c_[X, np.ones(X.shape[0])]
 
     def __convert_list(self, X=np.array(None)):
@@ -144,7 +157,20 @@ class LinearRegression:
 
     def __poly_transform(self, X):
         """
+        Internal class method
+        ---
+        Add the polynomial features of the matrix
+        
+        ---
+        Return
+        ---
+        Return a weight matrix of shape X (X.shape[1], 1)
 
+        ---
+        Formula
+        ---
+        weights_(t) = weights_(t-1) - learning_rate * gradient(MSE w.r.t weights)
+        gradient(MSE w.r.t weights) = X.T @ [(X @ weights - y)]
         """
         # Do the poly transform only if poly set to true and degree > 1
         # if degree == 1, there is no transformation, even if poly == True
@@ -187,11 +213,13 @@ class LinearRegression:
 
         # Convert y to np.ndarray
         y = self.__convert_list(y)
+  
 
         # Fit linear model weights to data using ols
-        self.weights_ = self.__ols(X, y)
-
-        # self.weights_ = self.__gradient_descent(X, y, epochs=50)
+        if "gradient" in self.loss:
+            self.weights_ = self.__gradient_descent(X, y, epochs=self.epochs, learning_rate=self.learning_rate)
+        else:
+            self.weights_ = self.__ols(X, y)
 
 
     def predict(self, X):
@@ -230,7 +258,7 @@ class LinearRegression:
         """
         ---
         model.score(X, y)
-        ---s
+        ---
             - Return the coefficient of determination R²
         ---
         Arguments: (X, y)\n
@@ -255,4 +283,3 @@ class LinearRegression:
         ssres = np.sum((y - self.predict(X))**2)
 
         return 1 - (ssres/sstot)
-
