@@ -1,10 +1,10 @@
 import sys
-sys.path.append(r"D:\Onedrive\4 - Documents\1 - Formations\Kaggle\MachineLearningAlgo")
+sys.path.append(r"D:\Onedrive\4 - Documents\1 - Formations\Kaggle\MachineLearningAlgo\ml")
 
 import pytest
 import numpy as np
 import pandas as pd
-from linear_reg.regression import LinearRegression
+from ml.model.linear_model.linear_regression import LinearRegression
 from sklearn.model_selection import train_test_split
 
 

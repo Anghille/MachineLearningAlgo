@@ -130,3 +130,6 @@ dmypy.json
 
 # File to test sklearn output for the tests
 /test/sklearn_reg_output.py
+
+# vscode files
+.vscode/

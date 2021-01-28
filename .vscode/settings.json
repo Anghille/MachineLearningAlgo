@@ -1,7 +1,7 @@
 {
-    "python.pythonPath": "C:\\Users\\Pierr\\.virtualenvs\\imdb-vA4MgWlR\\Scripts\\python.exe",
+    "python.pythonPath": "C:\\Python\\Python39\\python.exe",
     "python.testing.pytestArgs": [
-        "test"
+        "ml"
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.nosetestsEnabled": false,
