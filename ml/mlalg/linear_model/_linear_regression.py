@@ -1,62 +1,59 @@
 import numpy as np
-from ml.model.base import BaseModel
+from ._base import RegressionModel
 
+__ALL__ = ["LinearRegression"]
 # # : Union[np.ndarray, l, t]
 # l = List[Union[float, int]]
 # t = Tuple[Union[float, int]]
 
 
 
-class LinearRegression(BaseModel):
+class LinearRegression(RegressionModel):
     """
-       Linear Regression or Polynomial Regression model
+    Linear Regression or Polynomial Regression model
 
-        Parameters
-        ----------
-        loss: string-like of value "ols" or "gradient"\n
-              "ols" is the default value. OLS is used when one want to use Ordinary Least Square method 
-              to fit the model. It is recommanded to used the Gradient Descent algorithm when the number of 
-              feature exceed 10 due to inverse matrix computation used in OLS.
-        
-        poly: boolean\n
-              Default to False. When set true, polynomial features are added to the feature matrix.
-              The degree parameter must be superior to 1 for the polynomials features to be added.
-        
-        degree: integer\n
-                Set the degree of the polynomial regression. For a quadratic polynomial regression, 
-                set degree=2. Using a degree of 1, even if poly is set to true, will setup a 
-                Linear Regression model. 
+    Parameters
+    ----------
+    loss: string-like of value "ols" or "gradient"\n
+            "ols" is the default value. OLS is used when one want to use Ordinary Least Square method 
+            to fit the model. It is recommanded to used the Gradient Descent algorithm when the number of 
+            feature exceed 10 due to inverse matrix computation used in OLS.
+    
+    degree: integer\n
+            Determine if the Regression is set to Linear or Polynomial. 
+            Using a degree > 1, will transform the regression to a Polynomial Regression model.
+            A degree of 1 should be used if one wants to compute a standard Linear Regression.  
 
-        X_bias: boolean\n
-                Default to True. Add a bias vector the the feature matrix. Set this parameter to false
-                if your data are centered. Otherwise, it is recommanded to let it to default parameters. 
-        
-        epochs: used to set the number of gradient computation when using gradient descent.\n
-                Default to 50. Putting a higher number might cause the computation to overload the memory, 
-                in case of matrices with many features. Increase with caution. 
+    bias: boolean\n
+            Default to True. Add a bias vector the the feature matrix. Set this parameter to false
+            if your data are centered. Otherwise, it is recommanded to let it to the default parameter. 
+    
+    epochs: used to set the number of gradient computation when using gradient descent.\n
+            Default to 50. Putting a higher number might cause the computation to overload the memory, 
+            in case of matrices with many features. Increase with caution. 
 
-        learning_rate: Used during the gradient computation\n
-                       If the Gradient is returning -inf or +inf, try lower the value using factor 10, 100....
-                       This parameter control the "speed" of the gradient descent and is considered an hyper-
-                       parameter. Tweek it to get the optimal value
+    learning_rate: Used during the gradient computation\n
+                    If the Gradient is returning -inf or +inf, try lower the value using factor 10, 100....
+                    This parameter control the "speed" of the gradient descent and is considered an hyper-
+                    parameter. Tweek it to get the optimal value
 
-        Attributes
-        ----------
-        weights_: None\n
-                  Weights are computed via the .fit method using the feature matrix and the dependent-vector
-                  matrix. It is of shape (n_features, 1) if bias is set to False. Otherwise, it is of shape 
-                  (n_features + 1, 1)                                
+    Attributes
+    ----------
+    weights_: None\n
+                Weights are computed via the .fit method using the feature matrix and the dependent-vector
+                matrix. It is of shape (n_features, 1) if bias is set to False. Otherwise, it is of shape 
+                (n_features + 1, 1)                                
 
-        Return
-        ----------
-        LinearRegression: A LinearRegression object
+    Return
+    ----------
+    LinearRegression: A LinearRegression object
 
-        Raise
-        ----------
+    Raise
+    ----------
 
-        """
+    """
 
-    def __init__(self, loss="ols", poly=False, degree=1, X_bias=True, epochs=50, learning_rate=0.01):
+    def __init__(self, loss="ols", poly=False, degree=1, bias=True, epochs=50, learning_rate=0.01):
         """Init parameters of the LinearRegression Class"""
         # Polynomial
         self.poly = poly
@@ -68,7 +65,7 @@ class LinearRegression(BaseModel):
         self.learning_rate = learning_rate
         
         # Bias 
-        self.X_bias = X_bias
+        self.bias = bias
 
         # Weights of the regression
         self.weights_ = None
@@ -143,6 +140,9 @@ class LinearRegression(BaseModel):
             
         return self.weights_
 
+    # weights = (XT X)-1 XTy
+    # ridge weights = (XT X + lambda*I)-1 XTy
+
 
     def fit(self, X, y):
         """
@@ -170,7 +170,7 @@ class LinearRegression(BaseModel):
         X = super().poly_transform(X)
 
         # add bias (use it if X isnt normalized)
-        if self.X_bias:
+        if self.bias:
             X = super().bias(X)
 
         # Convert y to np.ndarray
@@ -215,38 +215,9 @@ class LinearRegression(BaseModel):
         X = self.poly_transform(X)
 
         # Add bias if specified (best use if data not normalized)
-        if self.X_bias:
+        if self.bias:
             X = self.bias(X)
 
         self.prediction_ = X.dot(self.weights_)
-        
 
-    def score(self, X, y):
-        """
-        Return the coefficient of determination R²
-
-        Parameters
-        ----------
-        X: an array-like, list, or tuple of float values\n
-        y: an array-like, list, or tuple of float values\n
-            X and y must have the same number of observations (X.shape[0] == y.shape[0])
-
-        Exemple
-        ----------
-        >>> X = [[3, 5, 8], [5, 8, 3], [4, 9, 3], [5, 6, 8]]
-        >>> y = [[4], [3], [2], [5]]
-        >>> model = LinearRegression()
-        >>> model.fit(X, y)
-        >>> model.score(X, y)
-
-        Formula
-        ----------
-            - R2 = 1 - SSres / SStot
-            - SSres = SUM (y - y-pred)²
-            - SStot = SUM (y - y-mean)²
-        """
-        try:
-            sstot = np.sum((y - np.mean(y))**2)
-            ssres = np.sum((y - self.prediction_)**2)
-
-        return 1 - (ssres/sstot)
+        return self.prediction_

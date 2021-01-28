@@ -1,17 +1,16 @@
 import numpy as np
 from sklearn.preprocessing import PolynomialFeatures
 
-class BaseModel(object):
+class RegressionModel(object):
 
-    def __init__(self, poly=False, degree=1, X_bias=True):
+    def __init__(self, degree=1, bias=True):
         """Init parameters of the BaseModel Class"""
 
         # Polynomial
-        self.poly = poly
         self.degree = degree
 
         # Bias 
-        self.X_bias = X_bias
+        self.bias = bias
 
 
     def bias(self, X):
@@ -78,7 +77,7 @@ class BaseModel(object):
         """
         # Do the poly transform only if poly set to true and degree > 1
         # if degree == 1, there is no transformation, even if poly == True
-        if self.poly and self.degree > 1:
+        if self.degree > 1:
             poly = PolynomialFeatures(self.degree)
             poly.fit(X)
             return X
