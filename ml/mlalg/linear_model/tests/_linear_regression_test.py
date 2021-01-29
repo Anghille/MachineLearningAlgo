@@ -1,11 +1,10 @@
-import sys
-sys.path.append(r"D:\Onedrive\4 - Documents\1 - Formations\Kaggle\MachineLearningAlgo\ml")
-
 import pytest
 import numpy as np
-import pandas as pd
+
+from ...utils import train_test_split
+
 from .._linear_regression import LinearRegression
-from sklearn.model_selection import train_test_split
+
 
 
 @pytest.fixture
@@ -13,10 +12,9 @@ def x_y():
     """
     Return X_train, X_test, y_train, y_test
     """
-    df = pd.read_csv(r"D:\Onedrive\4 - Documents\1 - Formations\Udemy (courses)\The Complete Machine Learning Data Science Course in Python\HousePrice2.csv")
-    X = df.iloc[:,:-1].values
-    y = df.iloc[:,-1:].values
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X = np.random.random((150,4))
+    y = 3*X[:,0] + 2*X[:,1] + 1**X[:,2] + X[:,3]
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.8)
     return X_train, X_test, y_train, y_test
 
 
