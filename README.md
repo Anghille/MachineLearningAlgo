@@ -12,7 +12,7 @@ This repository is used to show-case the implementation of most known machine-le
 
 # Versioning
 
-v1.0
+v1.0.0
 * Added *LinearRegression Class* with several computation methods (backpropagation or OLS)
 * Added *Regression Metrics* (r2, MSE, MAE, MedAE)
 * Added *utility function* train_test_split()
