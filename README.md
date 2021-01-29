@@ -3,11 +3,11 @@
 [![Pull-Requests Welcome](https://img.shields.io/badge/Pull%20Request-Welcome-blue)](https://github.com/Anghille/MachineLearningAlgo/pulls)
 
 [![python](https://img.shields.io/badge/Made%20with-Python-blue)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/Version-v0.0.0-blue)](https://github.com/Anghille/MachineLearningAlgo#versioning)
+[![Version](https://img.shields.io/badge/Version-v0.0.1-blue)](https://github.com/Anghille/MachineLearningAlgo#versioning)
 
 # Introduction
 
-This repository is used to show-case the implementation of most known machine-learning algorithms. From linear regression to SVM, the goal is to develop each model by hand without the use of numpy, scikit-learn or other libraries. 
+This repository is used to show-case the implementation of most known machine-learning algorithms. From linear regression to SVM, the goal is to develop each model by hand without the extansive use of scikit-learn or other libraries. 
 <br><br>
 
 # Versioning

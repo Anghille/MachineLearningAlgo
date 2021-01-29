@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from ...utils import train_test_split
+from ....utilities import train_test_split
 
 from .._linear_regression import LinearRegression
 
