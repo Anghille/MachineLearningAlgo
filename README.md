@@ -7,7 +7,7 @@
 
 # Introduction
 
-This repository is used to show-case the implementation of most known machine-learning algorithms. From linear regression to SVM, the goal is to develop each model by hand without the extansive use of scikit-learn or other libraries. 
+This repository is used to show-case the implementation of most known machine-learning algorithms. From linear regression to SVM, the goal is to develop each model by hand without the extansive using mostly numpy. 
 <br><br>
 
 # Versioning
