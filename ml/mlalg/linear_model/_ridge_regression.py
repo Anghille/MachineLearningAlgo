@@ -1,4 +1,7 @@
 import numpy as np
+
+from ...utilities import check_type
+from ...utilities import initialize_value
 from ._base import RegressionModel
 
 
@@ -6,7 +9,7 @@ __ALL__ = ["RidgeRegression"]
 
 class RidgeRegression(RegressionModel):
     """
-    Linear Regression or Polynomial Regression model
+    Linear Regression Model with ridge shrinkage
 
     Parameters
     ----------
@@ -22,23 +25,26 @@ class RidgeRegression(RegressionModel):
 
     bias: boolean\n
             Default to True. Add a bias vector the the feature matrix. Set this parameter to false
-            if your data are centered. Otherwise, it is recommanded to let it to the default parameter. 
+            if your data are centered. Otherwise, it is recommanded to let it to the default parameter.
+
+    lambda: float
+
     
     epochs: used to set the number of gradient computation when using gradient descent.\n
             Default to 50. Putting a higher number might cause the computation to overload the memory, 
             in case of matrices with many features. Increase with caution. 
 
     learning_rate: Used during the gradient computation\n
-                    If the Gradient is returning -inf or +inf, try lower the value using factor 10, 100....
-                    This parameter control the "speed" of the gradient descent and is considered an hyper-
-                    parameter. Tweek it to get the optimal value
+            If the Gradient is returning -inf or +inf, try lower the value using factor 10, 100....
+            This parameter control the "speed" of the gradient descent and is considered an hyper-
+            parameter. Tweek it to get the optimal value
 
     Attributes
     ----------
     weights_: None\n
-                Weights are computed via the .fit method using the feature matrix and the dependent-vector
-                matrix. It is of shape (n_features, 1) if bias is set to False. Otherwise, it is of shape 
-                (n_features + 1, 1)                                
+            Weights are computed via the .fit method using the feature matrix and the dependent-vector
+            matrix. It is of shape (n_features, 1) if bias is set to False. Otherwise, it is of shape 
+            (n_features + 1, 1)                                
 
     Return
     ----------
