@@ -45,6 +45,7 @@ def sklearn_linear(degree):
 def test_linear_ols_regression():
     """
     Check if our coefficients/weights are the same as the one found by sklearn
+    Using non-poly and OLS
     """
     degree=1
     X_train, X_test, y_train, y_test = generate_data()
@@ -72,6 +73,7 @@ def test_linear_ols_regression():
 def test_polynomial_ols_regression():
     """
     Check if our coefficients/weights are the same as the one found by sklearn
+    Using polynomial and OLS
     """
     degree = 4
     X_train, X_test, y_train, y_test = generate_data()
@@ -98,6 +100,7 @@ def test_polynomial_ols_regression():
 def test_linear_gradient_regression():
     """
     Check if our coefficients/weights are the same as the one found by sklearn
+    Using Non-poly and Batch Gradient Descent
     """
     degree=1
     X_train, X_test, y_train, y_test = generate_data()
@@ -125,6 +128,7 @@ def test_linear_gradient_regression():
 def test_polynomial_gradient_regression():
     """
     Check if our coefficients/weights are the same as the one found by sklearn
+    Using polynomial and Batch Gradient Descent
     """
     degree = 4
     X_train, X_test, y_train, y_test = generate_data()
