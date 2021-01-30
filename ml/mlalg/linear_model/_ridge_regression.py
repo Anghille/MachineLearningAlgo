@@ -1,4 +1,9 @@
 import numpy as np
+
+from ...utilities import check_type
+from ...utilities import initialize_value
+from ...utilities import polynomial_features
+
 from ._base import RegressionModel
 
 
@@ -6,7 +11,7 @@ __ALL__ = ["RidgeRegression"]
 
 class RidgeRegression(RegressionModel):
     """
-    Linear Regression or Polynomial Regression model
+    Linear Regression Model with ridge shrinkage
 
     Parameters
     ----------
@@ -22,34 +27,33 @@ class RidgeRegression(RegressionModel):
 
     bias: boolean\n
             Default to True. Add a bias vector the the feature matrix. Set this parameter to false
-            if your data are centered. Otherwise, it is recommanded to let it to the default parameter. 
+            if your data are centered. Otherwise, it is recommanded to let it to the default parameter.
+
+    lba: float\n
+            Default to 0. A higher lambda (lba) increases the power of the shrinkage. 
     
     epochs: used to set the number of gradient computation when using gradient descent.\n
             Default to 50. Putting a higher number might cause the computation to overload the memory, 
             in case of matrices with many features. Increase with caution. 
 
     learning_rate: Used during the gradient computation\n
-                    If the Gradient is returning -inf or +inf, try lower the value using factor 10, 100....
-                    This parameter control the "speed" of the gradient descent and is considered an hyper-
-                    parameter. Tweek it to get the optimal value
+            If the Gradient is returning -inf or +inf, try lower the value using factor 10, 100....
+            This parameter control the "speed" of the gradient descent and is considered an hyper-
+            parameter. Tweek it to get the optimal value
 
     Attributes
     ----------
     weights_: None\n
-                Weights are computed via the .fit method using the feature matrix and the dependent-vector
-                matrix. It is of shape (n_features, 1) if bias is set to False. Otherwise, it is of shape 
-                (n_features + 1, 1)                                
+            Weights are computed via the .fit method using the feature matrix and the dependent-vector
+            matrix. It is of shape (n_features, 1) if bias is set to False. Otherwise, it is of shape 
+            (n_features + 1, 1)                                
 
     Return
     ----------
-    LinearRegression: A LinearRegression object
-
-    Raise
-    ----------
-
+    RidgeRegression: A RidgeRegression object
     """
 
-    def __init__(self, loss="ols", degree=1, bias=True, lambda=0, epochs=50, learning_rate=0.01):
+    def __init__(self, loss="ols", degree=1, bias=True, lba=0, epochs=50, learning_rate=0.01):
         """Init parameters of the LinearRegression Class"""
         # Polynomial
         self.degree = degree
@@ -58,6 +62,7 @@ class RidgeRegression(RegressionModel):
         self.loss = loss
         self.epochs = epochs
         self.learning_rate = learning_rate
+        self.lba = lba
         
         # Bias 
         self.bias = bias
@@ -89,7 +94,7 @@ class RidgeRegression(RegressionModel):
         Weights = inverse(X.T . X) dot X.T . y
         """
 
-        return np.linalg.inv(X.T.dot(X) + lambda*np.eye(n=X.shape[0])).dot(X.T.dot(y))
+        return np.linalg.inv(X.T.dot(X) + self.lba*np.eye(n=X.shape[0])).dot(X.T.dot(y))
 
 
     def __gradient_descent(self, X, y, epochs, learning_rate):
@@ -106,26 +111,6 @@ class RidgeRegression(RegressionModel):
         gradient(MSE w.r.t weights) = X.T @ [(X @ weights - y)]
         """
 
-        def __initialize_value(matrix: np.ndarray):
-            """Return initialized random values between [-1, 0[ u ]0, 1]
-            used for gradient descent (for weights beta and bias)"""
-
-            # Initialize random values between -1/1 for the weights
-            initialised_value = np.random.uniform(-1, 1, (matrix.shape[1], 1)) # Generate X.shape[1] weights (should be 3)
-            
-            # Re-initialize values that are equal to 0 (if any) until no zeros can be found
-            # in the initialized weight matrix
-            # Why ? Having 0 in the initialize weight would "cancel" this weight at start when 
-            # Trying to find the best values. Which would lead to higher error in prediction
-            while np.count_nonzero(initialised_value == 0) >= 1:
-                for i in range(initialised_value.shape[0]):
-                    for j in range(initialised_value.shape[1]):
-                        if initialised_value[i,j] == 0:
-                            initialised_value[i, j] = np.random.uniform(-1, 1)
-
-            return initialised_value
-
-
         def __gradient(matrix_X, vec_y, weights, learning_rate):
             """Compute the gradient descent using weight, X and y as well as the learning rate alpha"""
             loss = (matrix_X @ weights - vec_y)
@@ -135,7 +120,7 @@ class RidgeRegression(RegressionModel):
 
             return weights, cost.tolist()[0][0]
 
-        self.weights_ = __initialize_value(X)
+        self.weights_ = initialize_value(X)
         for n in range(epochs):
             self.weights_ = __gradient(X, y, self.weights_, learning_rate)[0]
             
@@ -159,21 +144,16 @@ class RidgeRegression(RegressionModel):
         >>> X_test = [[11, 5, 8]]
         >>> model.predict(X_test)
         """
-
-        # Convert X to np.ndarray
-        # X = self.__convert_list(X)
-        X = super().convert_list(X)
+        # Check and convert type of X, y if needed
+        X = check_type(X)
+        y = check_type(y)
 
         # Add polynomial features if specified by ther user with poly == True (and degree > 1)
-        X = super().poly_transform(X)
+        X = polynomial_features(X, self.degree)
 
         # add bias (use it if X isnt normalized)
         if self.bias:
-            X = super().bias(X)
-
-        # Convert y to np.ndarray
-        y = super().convert_list(y)
-  
+            X = super().add_bias(X)
 
         # Fit linear model weights to data using ols
         if "gradient" in self.loss:
@@ -206,15 +186,15 @@ class RidgeRegression(RegressionModel):
         >>> X_test = [[11, 5, 8]]
         >>> model.predict(X_test)
         """
-        # Convert X to np.ndarray
-        X = self.convert_list(X)
+        # Convert X to np.ndarray object
+        X = check_type(X)
 
         # Add polynomial features if specified by the user using poly = True (and degree > 1)
-        X = self.poly_transform(X)
+        X = polynomial_features(X, self.degree)
 
         # Add bias if specified (best use if data not normalized)
         if self.bias:
-            X = self.bias(X)
+            X = super().add_bias(X)
 
         self.prediction_ = X.dot(self.weights_)
 

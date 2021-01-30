@@ -1,16 +1,17 @@
 import numpy as np
+
+from ...utilities import check_type
+from ...utilities import initialize_value
+from ...utilities import polynomial_features
+
 from ._base import RegressionModel
 
 __ALL__ = ["LinearRegression"]
-# # : Union[np.ndarray, l, t]
-# l = List[Union[float, int]]
-# t = Tuple[Union[float, int]]
-
 
 
 class LinearRegression(RegressionModel):
     """
-    Linear Regression or Polynomial Regression model
+    Linear Regression (Polynomial Regression if degree>1) model
 
     Parameters
     ----------
@@ -33,24 +34,20 @@ class LinearRegression(RegressionModel):
             in case of matrices with many features. Increase with caution. 
 
     learning_rate: Used during the gradient computation\n
-                    If the Gradient is returning -inf or +inf, try lower the value using factor 10, 100....
-                    This parameter control the "speed" of the gradient descent and is considered an hyper-
-                    parameter. Tweek it to get the optimal value
+            If the Gradient is returning -inf or +inf, try lower the value using factor 10, 100....
+            This parameter control the "speed" of the gradient descent and is considered an hyper-
+            parameter. Tweek it to get the optimal value
 
     Attributes
     ----------
     weights_: None\n
-                Weights are computed via the .fit method using the feature matrix and the dependent-vector
-                matrix. It is of shape (n_features, 1) if bias is set to False. Otherwise, it is of shape 
-                (n_features + 1, 1)                                
+            Weights are computed via the .fit method using the feature matrix and the dependent-vector
+            matrix. It is of shape (n_features, 1) if bias is set to False. Otherwise, it is of shape 
+            (n_features + 1, 1)                                
 
     Return
     ----------
     LinearRegression: A LinearRegression object
-
-    Raise
-    ----------
-
     """
 
     def __init__(self, loss="ols", poly=False, degree=1, bias=True, epochs=50, learning_rate=0.01):
@@ -69,7 +66,6 @@ class LinearRegression(RegressionModel):
 
         # Weights of the regression
         self.weights_ = None
-        self.prediction_ = None
     
 
     def __ols(self, X, y):
@@ -105,28 +101,10 @@ class LinearRegression(RegressionModel):
         gradient(MSE w.r.t weights) = X.T @ [(X @ weights - y)]
         """
 
-        def __initialize_value(matrix: np.ndarray):
-            """Return initialized random values between [-1, 0[ u ]0, 1]
-            used for gradient descent (for weights beta and bias)"""
-
-            # Initialize random values between -1/1 for the weights
-            initialised_value = np.random.uniform(-1, 1, (matrix.shape[1], 1)) # Generate X.shape[1] weights (should be 3)
-            
-            # Re-initialize values that are equal to 0 (if any) until no zeros can be found
-            # in the initialized weight matrix
-            # Why ? Having 0 in the initialize weight would "cancel" this weight at start when 
-            # Trying to find the best values. Which would lead to higher error in prediction
-            while np.count_nonzero(initialised_value == 0) >= 1:
-                for i in range(initialised_value.shape[0]):
-                    for j in range(initialised_value.shape[1]):
-                        if initialised_value[i,j] == 0:
-                            initialised_value[i, j] = np.random.uniform(-1, 1)
-
-            return initialised_value
-
-
         def __gradient(matrix_X, vec_y, weights, learning_rate):
-            """Compute the gradient descent using weight, X and y as well as the learning rate alpha"""
+            """
+            Compute the gradient descent using weight, X and y as well as the learning rate alpha
+            """
             loss = (matrix_X @ weights - vec_y)
             cost = (1/(2*matrix_X.shape[0])) * loss.T @ loss 
             gradient = matrix_X.T @ loss
@@ -134,14 +112,12 @@ class LinearRegression(RegressionModel):
 
             return weights, cost.tolist()[0][0]
 
-        self.weights_ = __initialize_value(X)
+        
+        self.weights_ = initialize_value(X)
         for n in range(epochs):
             self.weights_ = __gradient(X, y, self.weights_, learning_rate)[0]
             
         return self.weights_
-
-    # weights = (XT X)-1 XTy
-    # ridge weights = (XT X + lambda*I)-1 XTy
 
 
     def fit(self, X, y):
@@ -162,22 +138,19 @@ class LinearRegression(RegressionModel):
         >>> model.predict(X_test)
         """
 
-        # Convert X to np.ndarray
-        # X = self.__convert_list(X)
-        X = super().convert_list(X)
+        # Check and convert X,y to np.ndarray
+        X = check_type(X)
+        y = check_type(y)
 
-        # Add polynomial features if specified by ther user with poly == True (and degree > 1)
-        X = super().poly_transform(X)
+        # Add polynomial features if specified by ther user degree > 1
+        X = polynomial_features(X, self.degree)
 
         # add bias (use it if X isnt normalized)
         if self.bias:
-            X = super().bias(X)
-
-        # Convert y to np.ndarray
-        y = super().convert_list(y)
+            X = super().add_bias(X)
   
 
-        # Fit linear model weights to data using ols
+        # Fit linear model weights to data using ols or gradient descent
         if "gradient" in self.loss:
             self.weights_ = self.__gradient_descent(X, y, epochs=self.epochs, learning_rate=self.learning_rate)
         else:
@@ -208,16 +181,16 @@ class LinearRegression(RegressionModel):
         >>> X_test = [[11, 5, 8]]
         >>> model.predict(X_test)
         """
-        # Convert X to np.ndarray
-        X = self.convert_list(X)
+        # Check and convert X,y to np.ndarray
+        print(X)
+        X = check_type(X)
+        print(X)
 
         # Add polynomial features if specified by the user using poly = True (and degree > 1)
-        X = self.poly_transform(X)
+        X = polynomial_features(X, self.degree)
 
         # Add bias if specified (best use if data not normalized)
         if self.bias:
-            X = self.bias(X)
+            X = super().add_bias(X)
 
-        self.prediction_ = X.dot(self.weights_)
-
-        return self.prediction_
+        return X.dot(self.weights_)
