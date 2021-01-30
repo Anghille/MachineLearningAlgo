@@ -1,3 +1,4 @@
+from itertools import combinations_with_replacement
 import numpy as np
 
 __ALL__ = [
@@ -101,3 +102,54 @@ def initialize_value(matrix: np.ndarray):
                     initialised_value[i, j] = np.random.uniform(-1, 1)
 
     return initialised_value
+
+
+
+def polynomial_features(array, degree):
+    """
+    Return the polynomial combination of the features in the provided array
+
+    Parameters
+    ----------
+    array: an array-like object
+    
+    degree: the polynomial degree used to compute the combinations. 
+
+    Return
+    ---------
+    polynomial: array-like object of size (n_samples, n_poly_features)
+    """
+    array = check_type(array)
+
+    poly = list()
+    temp = list()
+    combination = ["c"]
+    terms = []
+
+    # Generate numpy features in format ["0","1","2"]
+    for feature in range(array.shape[1]):
+        combination.append(str(feature))
+
+    # Generate all features-formatted combination
+    for comb in combinations_with_replacement(combination, degree): 
+        terms.append(comb) 
+
+    terms = list(map(list, terms))
+
+    for i in range(len(terms)): 
+        while "c" in terms[i]: 
+            terms[i].remove("c") 
+    terms=terms[1:]
+
+    # Apply combinations to the numpy arrays
+    for comb in terms:
+        temp = None
+        for element in comb:
+            if temp is None:
+                temp = array[:,int(element)]
+            else:
+                temp = temp * array[:,int(element)]
+        poly.append(temp)
+    
+    return np.array(poly).T
+        

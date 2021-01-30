@@ -27,8 +27,8 @@ class RidgeRegression(RegressionModel):
             Default to True. Add a bias vector the the feature matrix. Set this parameter to false
             if your data are centered. Otherwise, it is recommanded to let it to the default parameter.
 
-    lambda: float
-
+    lba: float\n
+            Default to 0. A higher lambda (lba) increases the power of the shrinkage. 
     
     epochs: used to set the number of gradient computation when using gradient descent.\n
             Default to 50. Putting a higher number might cause the computation to overload the memory, 
@@ -49,13 +49,9 @@ class RidgeRegression(RegressionModel):
     Return
     ----------
     LinearRegression: A LinearRegression object
-
-    Raise
-    ----------
-
     """
 
-    def __init__(self, loss="ols", degree=1, bias=True, lambda=0, epochs=50, learning_rate=0.01):
+    def __init__(self, loss="ols", degree=1, bias=True, lba=0, epochs=50, learning_rate=0.01):
         """Init parameters of the LinearRegression Class"""
         # Polynomial
         self.degree = degree
@@ -64,6 +60,7 @@ class RidgeRegression(RegressionModel):
         self.loss = loss
         self.epochs = epochs
         self.learning_rate = learning_rate
+        self.lba = lba
         
         # Bias 
         self.bias = bias
@@ -95,7 +92,7 @@ class RidgeRegression(RegressionModel):
         Weights = inverse(X.T . X) dot X.T . y
         """
 
-        return np.linalg.inv(X.T.dot(X) + lambda*np.eye(n=X.shape[0])).dot(X.T.dot(y))
+        return np.linalg.inv(X.T.dot(X) + self.lba*np.eye(n=X.shape[0])).dot(X.T.dot(y))
 
 
     def __gradient_descent(self, X, y, epochs, learning_rate):
@@ -112,26 +109,6 @@ class RidgeRegression(RegressionModel):
         gradient(MSE w.r.t weights) = X.T @ [(X @ weights - y)]
         """
 
-        def __initialize_value(matrix: np.ndarray):
-            """Return initialized random values between [-1, 0[ u ]0, 1]
-            used for gradient descent (for weights beta and bias)"""
-
-            # Initialize random values between -1/1 for the weights
-            initialised_value = np.random.uniform(-1, 1, (matrix.shape[1], 1)) # Generate X.shape[1] weights (should be 3)
-            
-            # Re-initialize values that are equal to 0 (if any) until no zeros can be found
-            # in the initialized weight matrix
-            # Why ? Having 0 in the initialize weight would "cancel" this weight at start when 
-            # Trying to find the best values. Which would lead to higher error in prediction
-            while np.count_nonzero(initialised_value == 0) >= 1:
-                for i in range(initialised_value.shape[0]):
-                    for j in range(initialised_value.shape[1]):
-                        if initialised_value[i,j] == 0:
-                            initialised_value[i, j] = np.random.uniform(-1, 1)
-
-            return initialised_value
-
-
         def __gradient(matrix_X, vec_y, weights, learning_rate):
             """Compute the gradient descent using weight, X and y as well as the learning rate alpha"""
             loss = (matrix_X @ weights - vec_y)
@@ -141,7 +118,7 @@ class RidgeRegression(RegressionModel):
 
             return weights, cost.tolist()[0][0]
 
-        self.weights_ = __initialize_value(X)
+        self.weights_ = initialize_value(X)
         for n in range(epochs):
             self.weights_ = __gradient(X, y, self.weights_, learning_rate)[0]
             
@@ -165,10 +142,9 @@ class RidgeRegression(RegressionModel):
         >>> X_test = [[11, 5, 8]]
         >>> model.predict(X_test)
         """
-
-        # Convert X to np.ndarray
-        # X = self.__convert_list(X)
-        X = super().convert_list(X)
+        # Check and convert type if needed
+        X = check_type(X)
+        y = check_type(y)
 
         # Add polynomial features if specified by ther user with poly == True (and degree > 1)
         X = super().poly_transform(X)
