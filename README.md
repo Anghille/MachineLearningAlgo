@@ -10,6 +10,13 @@
 This repository is used to show-case the implementation of most known machine-learning algorithms. From linear regression to SVM, the goal is to develop each model by hand without the extansive using mostly numpy. 
 <br><br>
 
+# ToDo
+* Complete/Add Tests for utilities function / LinearClass / Metrics
+* Add functions to check datatype compatibility inside classes and functions
+* Add error/raise to functions (help the devs understand where the error comes from!)
+* Continue to add algorithms such as ridge, lasso, classification functions, and such
+
+
 # Versioning
 
 v1.0.0
