@@ -2,6 +2,8 @@ import numpy as np
 
 from ...utilities import check_type
 from ...utilities import initialize_value
+from ...utilities import polynomial_features
+
 from ._base import RegressionModel
 
 
@@ -48,7 +50,7 @@ class RidgeRegression(RegressionModel):
 
     Return
     ----------
-    LinearRegression: A LinearRegression object
+    RidgeRegression: A RidgeRegression object
     """
 
     def __init__(self, loss="ols", degree=1, bias=True, lba=0, epochs=50, learning_rate=0.01):
@@ -142,20 +144,16 @@ class RidgeRegression(RegressionModel):
         >>> X_test = [[11, 5, 8]]
         >>> model.predict(X_test)
         """
-        # Check and convert type if needed
+        # Check and convert type of X, y if needed
         X = check_type(X)
         y = check_type(y)
 
         # Add polynomial features if specified by ther user with poly == True (and degree > 1)
-        X = super().poly_transform(X)
+        X = polynomial_features(X, self.degree)
 
         # add bias (use it if X isnt normalized)
         if self.bias:
-            X = super().bias(X)
-
-        # Convert y to np.ndarray
-        y = super().convert_list(y)
-  
+            X = super().add_bias(X)
 
         # Fit linear model weights to data using ols
         if "gradient" in self.loss:
@@ -188,15 +186,15 @@ class RidgeRegression(RegressionModel):
         >>> X_test = [[11, 5, 8]]
         >>> model.predict(X_test)
         """
-        # Convert X to np.ndarray
-        X = self.convert_list(X)
+        # Convert X to np.ndarray object
+        X = check_type(X)
 
         # Add polynomial features if specified by the user using poly = True (and degree > 1)
-        X = self.poly_transform(X)
+        X = polynomial_features(X, self.degree)
 
         # Add bias if specified (best use if data not normalized)
         if self.bias:
-            X = self.bias(X)
+            X = super().add_bias(X)
 
         self.prediction_ = X.dot(self.weights_)
 

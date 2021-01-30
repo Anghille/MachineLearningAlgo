@@ -2,6 +2,8 @@ import numpy as np
 
 from ...utilities import check_type
 from ...utilities import initialize_value
+from ...utilities import polynomial_features
+
 from ._base import RegressionModel
 
 __ALL__ = ["LinearRegression"]
@@ -141,11 +143,11 @@ class LinearRegression(RegressionModel):
         y = check_type(y)
 
         # Add polynomial features if specified by ther user degree > 1
-        X = super().poly_transform(X)
+        X = polynomial_features(X, self.degree)
 
         # add bias (use it if X isnt normalized)
         if self.bias:
-            X = super().bias(X)
+            X = super().add_bias(X)
   
 
         # Fit linear model weights to data using ols or gradient descent
@@ -180,13 +182,15 @@ class LinearRegression(RegressionModel):
         >>> model.predict(X_test)
         """
         # Check and convert X,y to np.ndarray
+        print(X)
         X = check_type(X)
+        print(X)
 
         # Add polynomial features if specified by the user using poly = True (and degree > 1)
-        X = self.poly_transform(X)
+        X = polynomial_features(X, self.degree)
 
         # Add bias if specified (best use if data not normalized)
         if self.bias:
-            X = self.bias(X)
+            X = super().add_bias(X)
 
         return X.dot(self.weights_)
