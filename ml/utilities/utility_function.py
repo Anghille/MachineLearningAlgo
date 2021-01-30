@@ -4,7 +4,8 @@ import numpy as np
 __ALL__ = [
     "train_test_split",
     "check_type",
-    "initialize_value"
+    "initialize_value",
+    "polynomial_features"
 ]
 
 def train_test_split(X, y, train_size=0.8):
@@ -121,9 +122,8 @@ def polynomial_features(array, degree):
     """
     array = check_type(array)
 
-    poly = list()
-    temp = list()
-    combination = ["c"]
+    poly = list() # store final polynomial combinations
+    combination = ["c"] # store meta_combination
     terms = []
 
     # Generate numpy features in format ["0","1","2"]
